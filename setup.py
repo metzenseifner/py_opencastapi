@@ -11,7 +11,7 @@ README = (HERE / "README.md").read_text()
 
 # https://docs.python.org/3/distutils/setupscript.html#meta-data
 setup(name='opencastapi',
-      version='1.0.10',
+      version='1.0.11',
       description='Provides object-oriented abstraction over the Opencast API',
       long_description=README,
       long_description_content_type='text/markdown',
