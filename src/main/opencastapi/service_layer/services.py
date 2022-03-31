@@ -21,18 +21,26 @@
 # SOFTWARE.
 #
 from typing import Callable, Dict
-from opencastapi.adapters.config import Configuration,EnvironmentThenFileConfiguration
-from opencastapi.domain.call import OpencastApiCallable
+from opencastapi.adapters.config import AbstractConfiguration,EnvironmentThenFileConfiguration
+from opencastapi.adapters.http_client import AbstractHttpClient, RequestsHttpClient
+from opencastapi.domain.opencast_api_call import OpencastApiCall
 import logging
 
-class OpencastApi():
+class OpencastApi():   # TODO consider renaming to OpencastApiService
     """Main point of entry for API calls to Opencast nodes.
 
-        Objects created from this class abstract away the details of API calls to Opencast.
-        Simply create an object of this type and use its methods to interact with Opencast nodes.
+        Objects created from this class abstract away the details of API calls
+        to Opencast.  Simply create an object of this type and use its methods
+        to interact with Opencast nodes.
     """
-    def __init__(self, conf: Configuration=EnvironmentThenFileConfiguration):
+    def __init__(self,
+                 conf: AbstractConfiguration=EnvironmentThenFileConfiguration,
+                 http_client: AbstractHttpClient=RequestsHttpClient):
        self._conf = conf
+       self._http_client = http_client
+
+    def call(self, opencast_call: OpencastApiCall) -> OpencastResponse:
+        return self._http_client(opencast_call)
 
     def create_call(self, 
         target: str="",
@@ -49,7 +57,8 @@ class OpencastApi():
             parameters: Parameters segment of request
             headers: Headers of the request
         """
-        return OpencastApiCallable( # TODO send Command to the domain over a middleware service and return its response
+        # TODO Returning domain obj means it is hard to optimize
+        return OpencastApiCall( # TODO send Command to the domain over a middleware service and return its response
             http_verb=http_verb, 
             address=self._conf.target(target),
             path=path, 
@@ -58,7 +67,8 @@ class OpencastApi():
             data=data,
             auth_strategy=auth_strategy, 
             username=self._conf.username,
-            password=self._conf.password)
+            password=self._conf.password,
+            callback: Callable=self.call)
 
     def __call__(self, *args, **kwargs):
         logging.error(f"You tried constructing {self.__class__.__name__}. Did you mean to call opencastapi.create_call({kwargs})?")

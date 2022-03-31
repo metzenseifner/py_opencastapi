@@ -23,10 +23,10 @@
 import abc
 import os
 from typing import Dict
-from functionaljlk import getMapValue, IniConfigReader, Result
+from fpinpy import MapUtilities, IniConfigReader, Result
 import logging
 
-class Configuration(abc.ABC):
+class AbstractConfiguration(abc.ABC):
     """Main configuration abstraction.
 
        Defines what can be retrieved.
@@ -100,7 +100,7 @@ class Configuration(abc.ABC):
     def _decrypt(self) -> str:
         pass
 
-class EnvironmentThenFileConfiguration(Configuration):
+class EnvironmentThenFileConfiguration(AbstractConfiguration):
     """The standard runtime implementation for the configuration.
 
         Priority:
@@ -118,7 +118,7 @@ class EnvironmentThenFileConfiguration(Configuration):
             .orElse(Result.of(os.environ.get(Configuration.ENV_PATH_KEY)))\
             .getOrElse(Configuration.DEFAULT_PATH)
         reader = IniConfigReader(determined_path, f"Consider setting environment variable {Configuration.ENV_PATH_KEY}.") 
-        self._target_map = reader.getEntries(section=Configuration.TARGETS_SECTION_NAME)\
+        self._target_map = reader.getSection(Configuration.TARGETS_SECTION_NAME)\
             .map(lambda l: dict((a,b) for (a,b) in l))
         self._username = reader.getProperty(section=Configuration.SECURITY_SECTION_NAME, key='username')\
             .getOrElse(lambda: logging.error(f'Config missing {Configuration.SECURITY_SECTION_NAME} section with username key.'))
@@ -136,7 +136,7 @@ class EnvironmentThenFileConfiguration(Configuration):
             Result.Failure if not found.
         """
         return self._target_map\
-            .flatMap(lambda m: getMapValue(target_id, m)).getOrException()
+            .flatMap(lambda m: MapUtilities.getMapValue(target_id, m)).getOrException()
 
     @property
     def username(self) -> str:
@@ -146,7 +146,7 @@ class EnvironmentThenFileConfiguration(Configuration):
     def password(self) -> str:
         return self._password
 
-class InMemoryConfiguration(Configuration):
+class InMemoryConfiguration(AbstractConfiguration):
     def __init__(self, username, password, targets):
         self._username = username
         self._password = password
@@ -160,18 +160,22 @@ class InMemoryConfiguration(Configuration):
     def target(self, target_id):
         return self._targets.get(target_id)
 
+class FakeConfig(AbstractConfiguration):
 
-class TestConfiguration(Configuration):
+    DUMMY_TARGET = "dummy"
+
     """The test configuration implementation.
     """
-    def __init__(self, port=55000):
-        self.port = port
+    def __init__(self, target="http://localhost:55000", username="testuser", password="testpassword"):
+        self._target = target
+        self._username = username
+        self._password = password
 
     def target(self, target_id: str):
-        return f"http://localhost:{self.port}"
+        return self._target
     @property
     def username(self):
-        return "testuser"
+        return self._username
     @property
     def password(self):
-        return "testpassword"
+        return self._password

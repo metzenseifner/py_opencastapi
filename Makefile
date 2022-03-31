@@ -1,12 +1,12 @@
 
-MAIN_DIR=src/main
-TESTS_DIR=src/test
+MAIN_DIR=./src/main
+TESTS_DIR=../test
 
 build:
 	python setup.py sdist
 
 test:
-	cd $(MAIN_DIR)\
+	cd $(MAIN_DIR); \
 	python -m pytest $(TESTS_DIR)
 
 publish:

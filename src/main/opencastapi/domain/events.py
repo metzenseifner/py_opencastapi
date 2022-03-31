@@ -20,31 +20,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import List, Dict
-from opencastapi import bootstrap
-from opencastapi.adapters import config
-import logging
-logging.basicConfig(encoding='utf-8', level=logging.INFO)
+from dataclasses import dataclass
 
-# ------------------------------------------------------------------------------
-# Library functions. Bootstrapping dependencies and returning objects
-# ------------------------------------------------------------------------------
+class Event():
+    pass
 
-def create_call(*args, **kwargs):
-    """Main entry point library.
-    """
-    return bootstrap.bootstrap().create_call(*args, **kwargs)
+@dataclass
+class HttpCallCreatedEvent(Event):
+    http_verb: str
+    url: str
+    parameters: str
+    headers: str
+    data: bytes
+    username: str
+    password: str
 
-def create_api(conf: config.Configuration):
-    """Allow caller to provide their own configuration class.
-    
-        TODO possible design flaw. Consider how to expose conf class.
-    """
-    return bootstrap.bootstrap(conf=conf)
-
-def create_conf(
-    username:str="",
-    password:str="",
-    targets:Dict[str,str]={}
-    ):
-    return config.InMemoryConfiguration(username, password, targets)
+@dataclass
+class ApiCallEvent(Event):
+   pass 

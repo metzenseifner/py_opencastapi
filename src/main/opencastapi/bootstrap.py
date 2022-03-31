@@ -10,10 +10,11 @@ from .service_layer import services
 
 def bootstrap(
     conf: config.Configuration = config.EnvironmentThenFileConfiguration(),
+    client: AbstractHttpClient = OpencastHttpApiClient()
     ) -> services.OpencastApi:
     """Composition root to handle early initialization 
 
         returning a ready OpencastApi object.
         Dependency injection makes tests cleaner.
     """
-    return services.OpencastApi(conf)
+    return services.OpencastApi(conf, client=client)
